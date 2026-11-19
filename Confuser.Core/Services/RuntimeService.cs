@@ -23,7 +23,13 @@ namespace Confuser.Core.Services {
 		private void LoadConfuserRuntimeModule() {
 			var entryPoint = this.context.Project[0].Resolve(this.context.Project.BaseDirectory);
 			var hasMscorlib = entryPoint.GetAssemblyRef("mscorlib") != null;
-			var runtimeDllName = hasMscorlib ? "runtime\\net472\\Confuser.Runtime.dll" : "runtime\\net8.0\\Confuser.Runtime.dll";
+			// Build the path with Path.Combine so the separator matches the OS. A literal
+			// with '\\' only resolves on Windows; on Linux/macOS the backslash is not a
+			// directory separator, so the runtime module is not found and obfuscation
+			// fails with an IOException on the first phase that injects it.
+			var runtimeDllName = hasMscorlib
+				? Path.Combine("runtime", "net472", "Confuser.Runtime.dll")
+				: Path.Combine("runtime", "net8.0", "Confuser.Runtime.dll");
 
 			var module = typeof(RuntimeService).Assembly.ManifestModule;
 			string rtPath = runtimeDllName;
